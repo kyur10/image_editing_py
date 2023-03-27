@@ -153,7 +153,7 @@ class SecondWindow:
         try:
             imgdata = base64.b64decode(self.current_image_base64)
             image_name = os.path.splitext(self.image_details['name'])[0]
-            filename = f"{image_name}.{self.image_details['type']}"
+            filename = f"images/{image_name}.{self.image_details['type']}"
             with open(filename, 'wb') as f:
                 f.write(imgdata)
             messagebox.showinfo("Saved", "Image has been saved successfully")
