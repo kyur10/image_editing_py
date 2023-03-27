@@ -1,12 +1,15 @@
 # import the required libraries
 from tkinter import *
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 from PIL.ImageFilter import (
     BLUR, CONTOUR, DETAIL, EDGE_ENHANCE, EDGE_ENHANCE_MORE,
     EMBOSS, FIND_EDGES, SMOOTH, SMOOTH_MORE, SHARPEN
 )
 from pathlib import Path
+from io import BytesIO
+import base64
+import os
 
 
 class FirstWindow:
@@ -97,20 +100,11 @@ class SecondWindow:
         self.image_details = image_details
         self.original_image = Image.open(self.image_details['path'])
         self.width, self.height = self.original_image.size
+        self.current_image_base64 = None
 
         # add the image to the label
         img = Image.open(self.image_details['path'])
         self.loadImage(img)
-        # img = img.resize((500, 500), Image.LANCZOS)
-        # img = ImageTk.PhotoImage(img)
-        # self.canvas = Canvas(root, width=500, height=500, highlightbackground="#000", highlightthickness=1)
-        # self.image_container = self.canvas.create_image(0, 0, anchor=NW, image=img)
-        # self.canvas.image = img
-        # self.canvas.place(x=15, y=15, width=500, height=500)
-
-        # image_frame = Label(root, width=500, height=500, image=img)
-        # image_frame.image = img
-        # image_frame.place(x=15, y=15, width=500, height=500)
 
         upload_button = Button(root, text="Upload", justify="center", font="Helvetica 14", bg="#28a745",
                                fg="#ffffff", command=self.uploadButtonAction)
@@ -154,14 +148,27 @@ class SecondWindow:
     def uploadButtonAction(self):
         print("command")
 
+    # download the current canvas image to the local file location
     def downloadButtonAction(self):
-        print("command")
+        try:
+            imgdata = base64.b64decode(self.current_image_base64)
+            image_name = os.path.splitext(self.image_details['name'])[0]
+            filename = f"{image_name}.{self.image_details['type']}"
+            with open(filename, 'wb') as f:
+                f.write(imgdata)
+            messagebox.showinfo("Saved", "Image has been saved successfully")
+        except:
+            messagebox.showerror("Error", "Failed to save the image")
 
-    def resetButtonAction(self):
-        print("command")
+    @staticmethod
+    def resetButtonAction():
+        for widgets in root.winfo_children():
+            widgets.destroy()
+        FirstWindow(root)
 
-    def viewHistoryButtonAction(self):
-        print("command")
+    @staticmethod
+    def viewHistoryButtonAction():
+        print('test')
 
     def grayscaleButtonAction(self):
         img = self.original_image.convert('L')
@@ -171,6 +178,14 @@ class SecondWindow:
     def loadImage(self, img, reduce_picture=False):
         if not reduce_picture:
             img = img.resize((500, 500), Image.LANCZOS)
+
+        # convert the image to base64
+        im_file = BytesIO()
+        img.save(im_file, format="JPEG")
+        im_bytes = im_file.getvalue()  # im_bytes: image in binary format.
+        im_b64 = base64.b64encode(im_bytes)
+        self.current_image_base64 = im_b64
+
         img = ImageTk.PhotoImage(img)
         self.canvas = Canvas(root, width=500, height=500, highlightbackground="#000", highlightthickness=1)
         self.image_container = self.canvas.create_image(0, 0, anchor=NW, image=img)
