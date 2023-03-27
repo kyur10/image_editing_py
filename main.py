@@ -54,7 +54,7 @@ class FirstWindow:
         file_type_label.place(x=250, y=220, width=79, height=30)
 
     def openImage(self):
-        f_types = [('Jpg Files', '*.jpg')]
+        f_types = [('Jpg Files', '*.jpg'), ('Png Files', '*.png')]
         filename = filedialog.askopenfilename(title="Select A File", filetypes=f_types)
         img = Image.open(filename)
 
@@ -181,7 +181,10 @@ class SecondWindow:
 
         # convert the image to base64
         im_file = BytesIO()
-        img.save(im_file, format="JPEG")
+        image_ext = ((self.image_details['name']).split(".")[1]).upper()
+        if image_ext == 'JPG':
+            image_ext = "JPEG"
+        img.save(im_file, format=image_ext)
         im_bytes = im_file.getvalue()  # im_bytes: image in binary format.
         im_b64 = base64.b64encode(im_bytes)
         self.current_image_base64 = im_b64
