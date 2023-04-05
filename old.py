@@ -11,11 +11,9 @@ from io import BytesIO
 import base64
 import os
 
-root = Tk()
-
 
 class FirstWindow:
-    def __init__(self):
+    def __init__(self, root):
         self.image_details = {
             'name': "",
             'size': "",
@@ -91,11 +89,11 @@ class FirstWindow:
     def startButtonAction(self):
         for widgets in root.winfo_children():
             widgets.destroy()
-        SecondWindow(self.image_details)
+        SecondWindow(root, self.image_details)
 
 
 class SecondWindow:
-    def __init__(self, image_details):
+    def __init__(self, root, image_details):
         self.canvas = None
         self.image_container = None
         self.root_bg_color = "#F9F6EE"
@@ -176,7 +174,8 @@ class SecondWindow:
         blur_menu.place(x=530, y=190, width=230, height=35)
 
         rotate_label = StringVar(root)
-        options = ["Select rotate option", "Rotate Right 90", "Rotate Left 90", "Rotate 180"]
+        options = ["Select rotate option", "Rotate Right 90", "Rotate Left 90", "Rotate 180", "Flip Vertical",
+                   "Flip Horizontal"]
         rotate_label.set(options[0])  # default value
         rotate_menu = OptionMenu(root, rotate_label, *options, command=self.rotateSelect)
         rotate_menu.config(bg="#28a745", fg="#ffffff", font="Helvetica 14")
@@ -190,43 +189,22 @@ class SecondWindow:
         resolution_menu.place(x=530, y=310, width=230, height=35)
 
     def action(self, value):
-        reduce_picture = False
         img = self.original_image
 
-        filter_name, option_name = value
+        filter_name = list(value.items())[0][0]
+        option_name = list(value.items())[0][1]
 
-        # update the current dictionary
         for key, value in self.filters.items():
             if key == filter_name:
                 self.filters[key] = option_name
 
         for key, value in self.filters.items():
-            if key == "filter" and value != "":
+            if key == "filter" and value != "Select filter":
                 img = img.filter(value)
 
-            if key == "blur" and value != "":
-                img = img.filter(ImageFilter.BoxBlur(value))
+            elif key == "blur" and value != "Select blur option":
+                img = img.
 
-            if key == "grayscale" and value:
-                img = img.convert('L')
-
-            if key == "rotate" and value != "":
-                img = img.rotate(value)
-
-            if key == "resolution" and value != "":
-                img = img.reduce(value)
-
-            if key == "resize":
-                if value != "":
-                    width, height = value
-                    img = img.resize(value)
-                    self.display_width_height["text"] = f"{width}x{height}"
-                    reduce_picture = True
-                else:
-                    self.display_width_height["text"] = f"{self.width}x{self.height}"
-
-        self.canvas.delete("all")
-        self.loadImage(img, reduce_picture)
 
     def uploadButtonAction(self):
         print("command")
@@ -244,7 +222,7 @@ class SecondWindow:
             messagebox.showerror("Error", "Failed to save the image")
 
     def resetButtonAction(self):
-        SecondWindow(self.image_details)
+        SecondWindow(root, self.image_details)
 
     @staticmethod
     def viewHistoryButtonAction():
@@ -253,9 +231,12 @@ class SecondWindow:
     def grayscaleButtonAction(self):
         if not self.grayscale_added:
             self.grayscale_added = True
+            img = self.updated_image.convert('L')
         else:
             self.grayscale_added = False
-        self.action(("grayscale", self.grayscale_added))
+            img = self.original_image
+        self.canvas.delete("all")
+        self.loadImage(img)
 
     def loadImage(self, img, reduce_picture=False):
         self.updated_image = img
@@ -282,73 +263,95 @@ class SecondWindow:
         self.canvas.place(x=15, y=15, width=500, height=500)
 
     def filterSelect(self, event):
+        self.action({"filter": event})
         match event:
             case "CONTOUR":
-                value = CONTOUR
+                img = self.updated_image.filter(CONTOUR)
             case "DETAIL":
-                value = DETAIL
+                img = self.updated_image.filter(DETAIL)
             case "EDGE_ENHANCE":
-                value = EDGE_ENHANCE
+                img = self.updated_image.filter(EDGE_ENHANCE)
             case "FIND_EDGES":
-                value = FIND_EDGES
+                img = self.updated_image.filter(FIND_EDGES)
             case "SHARPEN":
-                value = SHARPEN
+                img = self.updated_image.filter(SHARPEN)
             case _:
-                value = ""
+                img = self.original_image
 
-        self.action(("filter", value))
+        self.canvas.delete("all")
+        self.loadImage(img)
 
     def resizeSelect(self, event):
+
+        reduce_picture = False
         if event != "Select resize option":
             value = int(event.split("%")[0])
             width = int(self.width - ((value / 100) * self.width))
             height = int(self.height - ((value / 100) * self.height))
-
-            self.action(("resize", (width, height)))
+            self.display_width_height["text"] = f"{width}x{height}"
+            img = self.updated_image.resize((width, height))
+            if width < 500 and height < 500:
+                reduce_picture = True
         else:
-            self.action(("resize", ""))
+            self.display_width_height["text"] = f"{self.width}x{self.height}"
+            img = self.original_image
+
+        self.canvas.delete("all")
+        self.loadImage(img, reduce_picture)
 
     # get executed when the user select blur level
     def blurSelect(self, event):
+        self.action({"blur": event})
         match event:
             case "Low":
-                value = 5
+                img = self.updated_image.filter(ImageFilter.BoxBlur(5))
             case "Medium":
-                value = 10
+                img = self.updated_image.filter(ImageFilter.BoxBlur(10))
             case "High":
-                value = 15
+                img = self.updated_image.filter(ImageFilter.BoxBlur(15))
             case _:
-                value = ""
+                img = self.original_image
 
-        self.action(("blur", value))
+        self.canvas.delete("all")
+        self.loadImage(img)
 
     # get executed when the user choose rotate option
     def rotateSelect(self, event):
+        self.action({"rotate": event})
+
         match event:
             case "Rotate Right 90":
-                value = -90
+                img = self.updated_image.rotate(-90, expand=True)
             case "Rotate Left 90":
-                value = 90
+                img = self.updated_image.rotate(90, expand=True)
             case "Rotate 180":
-                value = 180
+                img = self.updated_image.rotate(180)
+            case "Flip Vertical":
+                img = self.updated_image.transpose(Image.FLIP_TOP_BOTTOM)
+            case "Flip Horizontal":
+                img = self.updated_image.transpose(Image.FLIP_LEFT_RIGHT)
             case _:
-                value = ""
+                img = self.original_image
 
-        self.action(("rotate", value))
+        self.canvas.delete("all")
+        self.loadImage(img)
 
     # get executed when the user choose resolution adjustment option
     def resolutionSelect(self, event):
+        self.action({"resolution": event})
         match event:
             case "Medium":
-                value = 4
+                img = self.updated_image.reduce(4)  # reduce image resolution by 4 times
             case "Low":
-                value = 8
+                img = self.updated_image.reduce(8)  # reduce image resolution by 8 times
             case _:
-                value = ""
+                img = self.original_image
 
-        self.action(("resolution", value))
+        self.canvas.delete("all")
+        self.loadImage(img)
 
 
 if __name__ == "__main__":
-    app = FirstWindow()
+    root = Tk()
+    app = FirstWindow(root)
     root.mainloop()
