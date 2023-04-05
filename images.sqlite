@@ -1,0 +1,14 @@
+-- SQLite
+-- Remove null types later
+CREATE TABLE IMAGES(
+        ID INTEGER,
+        FILE_NAME TEXT,
+        DIMENSION TEXT ,
+        FILTER TEXT null,
+        IMAGE TEXT null,
+        CREATED_AT DATETIME NULL
+        );
+
+drop table images;
+
+insert into images VALUES(1, "test.jpg","20x40","blur","sdfskf",2/2/23);

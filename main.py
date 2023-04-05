@@ -10,6 +10,7 @@ from pathlib import Path
 from io import BytesIO
 import base64
 import os
+import db
 
 root = Tk()
 
@@ -350,5 +351,10 @@ class SecondWindow:
 
 
 if __name__ == "__main__":
-    app = FirstWindow()
-    root.mainloop()
+    # db.insert()
+    db.fetch()
+    # db.update()
+    db.delete()
+    # app = FirstWindow()
+    # root.mainloop()
+

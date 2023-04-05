@@ -203,7 +203,8 @@ class SecondWindow:
                 img = img.filter(value)
 
             elif key == "blur" and value != "Select blur option":
-                img = img.
+                img = img.filter(value)
+                # img = img.filter(value)
 
 
     def uploadButtonAction(self):

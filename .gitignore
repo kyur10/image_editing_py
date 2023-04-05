@@ -1,3 +1,5 @@
 .idea
 ./images/*
 .vs
+Sqlite/*
+__pycache__/db.cpython-311.pyc
