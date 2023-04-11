@@ -7,9 +7,18 @@ select = "select * from images"
 
 
 def fetch():
-    with closing(conn.cursor()) as cursor:
-        for row in cursor.execute(select):
-            print(row)
+    with closing(conn.cursor()) as c:
+        rows = c.execute("SELECT * FROM images")
+        response = []
+        for row in rows:
+            response.append({
+                "FILE_NAME": row[1],
+                "DIMENSION": row[2],
+                "FILTER": row[3],
+                "IMAGE": row[4],
+                "CREATED_AT": row[5]
+            })
+        return response
 
 
 def getId():
@@ -19,17 +28,18 @@ def getId():
         return values[0]+1
 
 
-def insert():
-    file_name = input("Enter file name \n")
-    dimension = input("Enter dimensions \n")
-    created_at = str(dt.datetime.now())
-
-    insert = 'INSERT INTO images(id,file_name,dimension,created_at) VALUES (?,?,?,?)'
-    values = [getId(), file_name, dimension, created_at]
-    with closing(conn.cursor()) as cursor:
-        cursor.execute(insert, values)
-        conn.commit()
-
+def insert(insert_value):
+    print(insert_value)
+    try:
+        with closing(conn.cursor()) as c:
+            sql_query = 'INSERT INTO images (FILE_NAME,DIMENSION,FILTER,IMAGE) VALUES (?,?,?,?)'  # SQL query to insert
+            values = [insert_value['FILE_NAME'], insert_value['DIMENSION'], insert_value['FILTER'], insert_value['IMAGE']]
+            c.execute(sql_query, values)  # works for one record
+            conn.commit()  # commit the executed query
+        return True
+    except Exception as e:
+        print(Exception, e)
+        return False
 
 def update():
     id = input("Enter student id \n")
@@ -51,14 +61,14 @@ def delete():
         conn.commit()
 
 
-def creatTable():
+def createTable():
     sql = """CREATE TABLE IMAGES(
-        ID INTEGER,
-        FILE_NAME TEXT,
-        DIMENSION TEXT ,
-        FILTER TEXT null,
-        IMAGE TEXT null,
-        CREATED_AT DATETIME NULL
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        FILE_NAME TEXT NOT NULL,
+        DIMENSION TEXT NOT NULL,
+        FILTER LONGTEXT NOT NULL,
+        IMAGE LONGTEXT NOT NULL,
+        CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
         );"""
     with closing(conn.cursor()) as cursor:
         cursor.execute(sql)
